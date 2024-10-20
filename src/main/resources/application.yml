@@ -21,5 +21,5 @@ spring:
         trace: false
 iyzico:
   base-url: https://sandbox-api.iyzipay.com
-  api-key: sandbox-Uwv0VBI3Xa9gABVeMLMi4kjPma16caLz
-  secret-key: sandbox-2yLyfFMeGvmfabWwtn4wkDaEXLgNRO7a
+  api-key: sandbox-Q4ecv6cFcqKlLEu6zGENF1JVJt67K8ko
+  secret-key: sandbox-ykuA41QjWoxMsTUqxR6byag6wQ0ns2Ra
