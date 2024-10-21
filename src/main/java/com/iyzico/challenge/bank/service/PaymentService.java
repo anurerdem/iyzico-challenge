@@ -1,12 +1,13 @@
 package com.iyzico.challenge.bank.service;
 
-import com.iyzico.challenge.bank.dto.request.PaymentDTO;
+import com.iyzico.challenge.bank.dto.request.PaymentRequest;
 import com.iyzico.challenge.bank.dto.response.PaymentResponse;
 import com.iyzico.challenge.bank.repository.PaymentRepository;
+import com.iyzico.challenge.enums.ErrorCode;
 import com.iyzico.challenge.exceptions.PaymentException;
 import com.iyzico.challenge.exceptions.SeatException;
 import com.iyzico.challenge.seat.SeatService;
-import com.iyzico.challenge.seat.entity.Seat;
+import com.iyzico.challenge.entity.Seat;
 import com.iyzipay.model.Status;
 import com.iyzipay.model.Payment;
 import lombok.extern.slf4j.Slf4j;
@@ -22,28 +23,28 @@ import java.util.List;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final IyzicoSandboxPaymentIntegrationService iyzicoSandboxPaymentIntegration;
+    private final IyzicoSandboxPaymentService iyzicoSandboxPaymentIntegration;
     private final SeatService seatService;
 
-    public PaymentService(PaymentRepository paymentRepository, SeatService seatService, IyzicoSandboxPaymentIntegrationService iyzicoSandboxPaymentIntegration) {
+    public PaymentService(PaymentRepository paymentRepository, SeatService seatService, IyzicoSandboxPaymentService iyzicoSandboxPaymentIntegration) {
         this.paymentRepository = paymentRepository;
         this.seatService = seatService;
         this.iyzicoSandboxPaymentIntegration = iyzicoSandboxPaymentIntegration;
     }
 
-    public PaymentResponse pay(PaymentDTO paymentDTO) throws PaymentException {
+    public PaymentResponse pay(PaymentRequest paymentRequest) {
         List<Seat> seats = new ArrayList<>();
-        for (Long id : paymentDTO.getSeatIds()) {
+        for (Long id : paymentRequest.getSeatIds()) {
             try {
                 Seat seat = seatService.getSeat(id);
                 if(Boolean.TRUE.equals(seat.getIsSold())){
-                    throw new SeatException();
+                    throw new SeatException(ErrorCode.SEAT_ALREADY_SOLD);
                 }
                 seats.add(seat);
             }
             catch (Exception ex) {
                 log.error("Selected Seat already sold");
-                throw new PaymentException(ex.getMessage() + " Payment failed.");
+                throw new PaymentException(ErrorCode.PAYMENT_FAILED);
             }
         }
 
@@ -66,10 +67,9 @@ public class PaymentService {
 
     public void savePayment(PaymentResponse response, List<Seat> seats) {
         for(Seat seat : seats) {
-            com.iyzico.challenge.bank.entity.Payment payment = new com.iyzico.challenge.bank.entity.Payment();
+            com.iyzico.challenge.entity.Payment payment = new com.iyzico.challenge.entity.Payment();
             payment.setPrice(seat.getSeatPrice());
             payment.setSeat(seat);
-            payment.setFlight(seat.getFlight());
             payment.setBankResponse(response.getResult());
             paymentRepository.save(payment);
         }

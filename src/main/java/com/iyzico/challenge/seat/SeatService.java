@@ -1,15 +1,13 @@
 package com.iyzico.challenge.seat;
 
-
-import com.iyzico.challenge.controller.MessageMapper;
-import com.iyzico.challenge.seat.dto.request.SeatCreateRequest;
-import com.iyzico.challenge.seat.dto.request.SeatUpdateRequest;
-import com.iyzico.challenge.exceptions.NotFoundException;
+import com.iyzico.challenge.entity.Flight;
+import com.iyzico.challenge.entity.Seat;
+import com.iyzico.challenge.enums.ErrorCode;
 import com.iyzico.challenge.exceptions.SeatException;
 import com.iyzico.challenge.flight.FlightService;
-import com.iyzico.challenge.flight.entity.Flight;
-import com.iyzico.challenge.seat.dto.response.SeatDTO;
-import com.iyzico.challenge.seat.entity.Seat;
+import com.iyzico.challenge.seat.dto.request.SeatCreateRequest;
+import com.iyzico.challenge.seat.dto.request.SeatUpdateRequest;
+import com.iyzico.challenge.seat.dto.response.SeatResponseResponse;
 import com.iyzico.challenge.seat.repository.SeatRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,40 +23,40 @@ import java.util.stream.Collectors;
 public class SeatService {
     private final SeatRepository seatRepository;
     private final FlightService flightService;
-    private final MessageMapper messageMapper;
+    private final SeatMapper seatMapper;
 
-    public SeatService(SeatRepository seatRepository, FlightService flightService, MessageMapper messageMapper) {
+    public SeatService(SeatRepository seatRepository, FlightService flightService, SeatMapper seatMapper) {
         this.seatRepository = seatRepository;
         this.flightService = flightService;
-        this.messageMapper = messageMapper;
+        this.seatMapper = seatMapper;
 
     }
 
     @Transactional
-    public List<SeatDTO> add(SeatCreateRequest request) throws NotFoundException {
+    public List<SeatResponseResponse> addSeat(SeatCreateRequest request) {
         Flight flight = flightService.getFlight(request.getId());
-        List<Seat> seats = request.getSeats().stream().map(messageMapper::toSeatEntity).collect(Collectors.toList());
+        List<Seat> seats = request.getSeats().stream().map(seatMapper::toSeatEntity).collect(Collectors.toList());
         seats.forEach(p -> p.setFlight(flight));
-        List<Seat> saved= seatRepository.saveAllAndFlush(seats);
+        List<Seat> saved = seatRepository.saveAllAndFlush(seats);
         log.info(seats.size() + " seat added successfully!");
-        return messageMapper.convertSeatEntityListToSeatDtoList(saved);
+        return seatMapper.convertSeatEntityListToSeatDtoList(saved);
     }
 
     @Transactional
-    public List<SeatDTO> updateSeats(SeatUpdateRequest request) throws NotFoundException, SeatException {
-        List<SeatDTO> seatsDTO = new ArrayList<>();
+    public List<SeatResponseResponse> updateSeats(SeatUpdateRequest request) {
+        List<SeatResponseResponse> seatsDTO = new ArrayList<>();
         List<Seat> entitySeats = new ArrayList<>();
 
-        for(Long id : request.getIdPriceMap().keySet()){
+        for (Long id : request.getIdPriceMap().keySet()) {
             Seat seat = getSeat(id);
 
             if (Boolean.TRUE.equals((seat.getIsSold()))) {
-                throw new SeatException();
+                throw new SeatException(ErrorCode.SEAT_ALREADY_SOLD);
             }
 
             seat.setSeatPrice(request.getIdPriceMap().get(id));
             entitySeats.add(seat);
-            seatsDTO.add(messageMapper.toSeatDto(seat));
+            seatsDTO.add(seatMapper.toSeatDto(seat));
         }
 
         seatRepository.saveAll(entitySeats);
@@ -65,21 +64,22 @@ public class SeatService {
         return seatsDTO;
     }
 
-    public List<SeatDTO> getAvailableSeats(Long flightId) throws NotFoundException {
+    public List<SeatResponseResponse> getAvailableSeats(Long flightId) {
         Flight flight = flightService.getFlight(flightId);
         List<Seat> availableSeats = seatRepository.findSeatsByFlightAndIsSoldFalse(flight);
 
         if (availableSeats.isEmpty()) {
             log.error("No available seat found for flight: {}", flight.getCallSign());
-            throw new NotFoundException();
+            throw new SeatException(ErrorCode.AVAILABLE_SEAT_NOT_FOUND);
         }
-        return messageMapper.convertSeatEntityListToSeatDtoList(availableSeats);
+        return seatMapper.convertSeatEntityListToSeatDtoList(availableSeats);
     }
 
-    public void delete(Long id) throws NotFoundException, SeatException {
+    @Transactional
+    public void deleteSeat(Long id) {
         Seat seat = this.getSeat(id);
-        if(Boolean.TRUE.equals(seat.getIsSold())){
-            throw new SeatException();
+        if (Boolean.TRUE.equals(seat.getIsSold())) {
+            throw new SeatException(ErrorCode.SEAT_ALREADY_SOLD);
         }
         seat.setDeleteFlag(true);
         seatRepository.save(seat);
@@ -89,7 +89,7 @@ public class SeatService {
     public void updateSeatsStatus(List<Seat> seats) {
         List<Seat> entitySeats = new ArrayList<>();
 
-        for(Seat seat : seats){
+        for (Seat seat : seats) {
             seat.setIsSold(true);
             entitySeats.add(seat);
         }
@@ -98,8 +98,13 @@ public class SeatService {
         log.info("Seats status updated successfully!");
     }
 
-    public Seat getSeat(Long id) throws NotFoundException {
-        return seatRepository.findById(id).orElseThrow(NotFoundException::new);
+    public Seat getSeat(Long id) {
+        Optional<Seat> seatOptional = seatRepository.findById(id);
+        if (seatOptional.isEmpty()) {
+            log.error("No seat found for seat number: {}", id);
+            throw new SeatException(ErrorCode.SEAT_NOT_FOUND);
+        }
+        return seatOptional.get();
     }
 
 }

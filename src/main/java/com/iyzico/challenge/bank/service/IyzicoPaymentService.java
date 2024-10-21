@@ -1,7 +1,9 @@
 package com.iyzico.challenge.bank.service;
 
+import com.iyzico.challenge.bank.dto.request.BankPaymentRequest;
+import com.iyzico.challenge.bank.dto.response.BankPaymentResponse;
 import com.iyzico.challenge.bank.repository.PaymentRepository;
-import com.iyzico.challenge.bank.entity.Payment;
+import com.iyzico.challenge.entity.Payment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

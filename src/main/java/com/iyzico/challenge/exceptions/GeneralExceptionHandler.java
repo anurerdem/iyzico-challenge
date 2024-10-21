@@ -1,30 +1,39 @@
 package com.iyzico.challenge.exceptions;
 
+import com.iyzico.challenge.enums.ErrorCode;
 import org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.servlet.http.HttpServletRequest;
+import java.sql.SQLException;
+
+@ControllerAdvice
 @RestControllerAdvice
 public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Object> handleNoSuchElementFoundException(NotFoundException notFoundException, WebRequest request) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundException);
+    private final MessageSource messageSource;
+
+    public GeneralExceptionHandler(MessageSource messageSource) {
+        this.messageSource = messageSource;
     }
-    @ExceptionHandler(SeatException.class)
-    public ResponseEntity<Object> handleSeatTakenException(SeatException seatTakenException, WebRequest request) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(seatTakenException);
+
+    @ExceptionHandler({BaseException.class})
+    public ResponseEntity<?> handleBaseException(HttpServletRequest req, BaseException ex) {
+
+        String message = messageSource.getMessage(ex.getErrorCode().getCode(), null, req.getLocale());
+
+        return ResponseEntity.status(ErrorCode.SEAT_OPERATION_FAILED.getHttpStatus()).body(message);
     }
-    @ExceptionHandler(PaymentException.class)
-    public ResponseEntity<Object> handlePaymentException(PaymentException paymentException, WebRequest request) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(paymentException);
-    }
-    @ExceptionHandler(JdbcSQLIntegrityConstraintViolationException.class)
-    public ResponseEntity<Object> handleException(JdbcSQLIntegrityConstraintViolationException dbException, WebRequest request) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(dbException);
+
+    @ExceptionHandler({SQLException.class})
+    public ResponseEntity<?> handleSQLException(HttpServletRequest req, SQLException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
     }
 }

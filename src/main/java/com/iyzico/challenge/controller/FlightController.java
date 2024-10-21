@@ -1,11 +1,10 @@
 package com.iyzico.challenge.controller;
 
-import com.iyzico.challenge.exceptions.NotFoundException;
 import com.iyzico.challenge.flight.FlightService;
-import com.iyzico.challenge.flight.dto.request.FlightCreate;
-import com.iyzico.challenge.flight.dto.request.FlightUpdate;
-import com.iyzico.challenge.flight.dto.response.FlightAndSeat;
-import com.iyzico.challenge.flight.dto.response.FlightDTO;
+import com.iyzico.challenge.flight.dto.request.FlightCreateRequest;
+import com.iyzico.challenge.flight.dto.request.FlightUpdateRequest;
+import com.iyzico.challenge.flight.dto.response.FlightAndSeatResponse;
+import com.iyzico.challenge.flight.dto.response.FlightResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping( "api/flight")
+@RequestMapping( "api/v1/flight")
 public class FlightController {
 
     private final FlightService flightService;
@@ -23,33 +22,33 @@ public class FlightController {
     }
 
     @PostMapping
-    public ResponseEntity<FlightDTO> createFlight(@RequestBody FlightCreate request) {
-        FlightDTO flightDTO = flightService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightDTO);
+    public ResponseEntity<FlightResponse> createFlight(@RequestBody FlightCreateRequest request) {
+        FlightResponse flightResponse = flightService.createFlight(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightResponse);
     }
 
     @GetMapping("all/flights")
-    public ResponseEntity<List<FlightDTO>> getFlights() {
-        List<FlightDTO> flightDTOs = flightService.getFlights();
-        return ResponseEntity.ok().body(flightDTOs);
+    public ResponseEntity<List<FlightResponse>> getFlights() {
+        List<FlightResponse> flightResponses = flightService.getFlights();
+        return ResponseEntity.ok().body(flightResponses);
     }
 
     @GetMapping("seats")
-    public ResponseEntity<FlightAndSeat> getFlightsWithSeat(@RequestParam Long id) {
-        FlightAndSeat flightDTOs = flightService.getFlightsWithSeats(id);
+    public ResponseEntity<FlightAndSeatResponse> getFlightsWithSeat(@RequestParam Long id) {
+        FlightAndSeatResponse flightDTOs = flightService.getFlightsWithSeats(id);
         return ResponseEntity.ok().body(flightDTOs);
     }
 
 
     @PutMapping
-    public ResponseEntity<FlightDTO> updateFlight(@RequestParam Long id, @RequestBody FlightUpdate request) throws NotFoundException {
-        FlightDTO flightDTO = flightService.update(id, request);
-        return ResponseEntity.ok().body(flightDTO);
+    public ResponseEntity<FlightResponse> updateFlight(@RequestParam Long id, @RequestBody FlightUpdateRequest request){
+        FlightResponse flightResponse = flightService.updateFlight(id, request);
+        return ResponseEntity.ok().body(flightResponse);
     }
 
     @DeleteMapping
-    public ResponseEntity<Object> deleteFlight(@RequestParam Long id) throws NotFoundException {
-        flightService.delete(id);
+    public ResponseEntity<Object> deleteFlight(@RequestParam Long id){
+        flightService.deleteFlight(id);
         return ResponseEntity.ok().build();
     }
 }

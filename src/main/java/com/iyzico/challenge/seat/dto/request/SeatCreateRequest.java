@@ -1,6 +1,6 @@
 package com.iyzico.challenge.seat.dto.request;
 
-import com.iyzico.challenge.seat.dto.response.SeatCreate;
+import com.iyzico.challenge.seat.dto.response.SeatCreateResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,5 +15,5 @@ import java.util.List;
 @NoArgsConstructor
 public class SeatCreateRequest {
     private Long id;
-    private List<SeatCreate> seats;
+    private List<SeatCreateResponse> seats;
 }

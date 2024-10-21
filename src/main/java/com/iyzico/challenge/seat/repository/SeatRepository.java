@@ -1,7 +1,7 @@
 package com.iyzico.challenge.seat.repository;
 
-import com.iyzico.challenge.flight.entity.Flight;
-import com.iyzico.challenge.seat.entity.Seat;
+import com.iyzico.challenge.entity.Flight;
+import com.iyzico.challenge.entity.Seat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
