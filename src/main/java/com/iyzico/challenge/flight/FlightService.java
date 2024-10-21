@@ -25,7 +25,6 @@ public class FlightService {
 
     public FlightService(FlightRepository flightRepository, FlightMapper messageMapper) {
         this.flightRepository = flightRepository;
-
         this.messageMapper = messageMapper;
     }
 
@@ -33,18 +32,19 @@ public class FlightService {
     public void deleteFlight(Long id) {
         Flight flight = this.getFlight(id);
         flight.setDeleteFlag(true);
+        log.info("Flight information is deleted!");
         flightRepository.save(flight);
     }
 
     public List<FlightResponse> getFlights() {
 
         List<Flight> flights = flightRepository.findAll();
-
         return flights.stream().map(messageMapper::toFlightResponse).collect(Collectors.toList());
     }
 
     public FlightAndSeatResponse getFlightsWithSeats(Long id) {
         Flight flights = getFlight(id);
+        log.info("Flight information was brought!");
         return messageMapper.toFlightAndSeatTest(flights);
     }
 

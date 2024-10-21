@@ -82,6 +82,7 @@ public class SeatService {
             throw new SeatException(ErrorCode.SEAT_ALREADY_SOLD);
         }
         seat.setDeleteFlag(true);
+        log.info("Seat information is deleted!");
         seatRepository.save(seat);
     }
 

@@ -10,7 +10,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "Spring")
 public interface FlightMapper {
 
-
     @Mapping(target = "id", source = "id")
     FlightResponse toFlightResponse(Flight entity);
 
