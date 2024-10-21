@@ -12,7 +12,6 @@ public interface FlightMapper {
 
     @Mapping(target = "id", source = "id")
     FlightResponse toFlightResponse(Flight entity);
-
     FlightAndSeatResponse toFlightAndSeatTest(Flight entity);
 
 }

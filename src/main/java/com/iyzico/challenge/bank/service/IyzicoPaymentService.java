@@ -6,10 +6,13 @@ import com.iyzico.challenge.bank.repository.PaymentRepository;
 import com.iyzico.challenge.entity.Payment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 
 @Service
 @Transactional
@@ -25,6 +28,11 @@ public class IyzicoPaymentService {
         this.paymentRepository = paymentRepository;
     }
 
+    @Retryable(
+            value = { SQLException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000)
+    )
     public void pay(BigDecimal price) {
         //pay with bank
         BankPaymentRequest request = new BankPaymentRequest();

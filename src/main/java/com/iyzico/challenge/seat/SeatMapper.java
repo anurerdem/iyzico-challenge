@@ -12,9 +12,7 @@ import java.util.List;
 public interface SeatMapper {
     @Mapping(target = "id", source = "id")
     SeatResponseResponse toSeatDto(Seat entity);
-
     Seat toSeatEntity(SeatCreateResponse dto);
-
     List<SeatResponseResponse> convertSeatEntityListToSeatDtoList(List<Seat> entityList);
 
 }
